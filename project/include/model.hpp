@@ -38,6 +38,8 @@ namespace model {
         virtual boundary_coefs get_y_upper_coefs(const size_t y) const = 0;
         virtual boundary_coefs get_x_lower_coefs(const size_t x) const = 0;
         virtual boundary_coefs get_y_lower_coefs(const size_t x) const = 0;
+        virtual size_t x_dim() const = 0;
+        virtual size_t y_dim() const = 0;
     };
 
     // Model79 implements IModel interface and stands for my particular problem setup
@@ -82,6 +84,8 @@ namespace model {
         boundary_coefs get_y_upper_coefs(const size_t y) const override;
         boundary_coefs get_x_lower_coefs(const size_t x) const override;
         boundary_coefs get_y_lower_coefs(const size_t x) const override;
+        size_t x_dim() const override { return dims.first; }
+        size_t y_dim() const override { return dims.second; }
 
         ~Model79() = default;
         Model79() = delete;
@@ -95,5 +99,7 @@ namespace model {
             dt(dt), dx(dx), dy(dy), a(a),
             dims(std::make_pair(x_nodes, y_nodes)),
             grid(x_nodes, y_nodes) { grid_set_up(); };
+
+        friend void pprint_grid(const Model79 & m, std::ostream & out);
     };
 }

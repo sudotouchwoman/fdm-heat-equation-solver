@@ -1,23 +1,6 @@
 #include "model.hpp"
 
-struct Point {
-    const double x;
-    const double y;
-    Point(const double x, const double y) :
-        x(x), y(y) {};
-    ~Point() = default;
-};
-
-// main geometry points
-const Point LOWER_LEFT(0.0, 0.0);
-const Point LOWER_RIGHT(10.0, 0.0);
-const Point UPPER_LEFT(0.0, 5.0);
-const Point UPPER_RIGHT(5.0, 5.0);
-
-const Point HOLE_LOWER_LEFT(2.0, 1.5);
-const Point HOLE_LOWER_RIGHT(5.0, 1.5);
-const Point HOLE_UPPER_LEFT(2.0, 3.5);
-const Point HOLE_UPPER_RIGHT(5.0, 3.5);
+#include <iostream>
 
 /*
 *    in schematic, the geometry of the plate
@@ -34,11 +17,6 @@ const Point HOLE_UPPER_RIGHT(5.0, 3.5);
 */
 
 namespace model {
-
-    static bool between(const double i, const double a, const double b) {
-        return a < i and i < b;
-    }
-
     void Model79::throw_on_bounds(const size_t x, const size_t y) const {
         if (x > dims.first) throw std::runtime_error("X index exceding grid bounds");
         if (y > dims.second) throw std::runtime_error("Y index exceding grid bounds");
@@ -58,76 +36,62 @@ namespace model {
 
         // left side
         for (size_t i = 0; i < y_dim; ++i) {
-            grid.nodes[0][i].condition_type = BOUNDARY_2TYPE;
+            grid.nodes[i][0].condition_type = BOUNDARY_2TYPE;
         }
 
         // floor
         for (size_t i = 0; i < x_dim; ++i) {
-            grid.nodes[i][0].condition_type = BOUNDARY_1TYPE;
-            grid.nodes[i][0].initial_value = T_FLOOR;
+            grid.nodes[y_dim - 1][i].condition_type = BOUNDARY_1TYPE;
+            grid.nodes[y_dim - 1][i].initial_value = T_FLOOR;
         }
 
         // ceiling
         for (size_t i = 0; i < x_half; ++i) {
-            grid.nodes[i][y_dim - 1].condition_type = BOUNDARY_1TYPE;
-            grid.nodes[i][y_dim - 1].initial_value = T_CEIL;
+            grid.nodes[0][i].condition_type = BOUNDARY_1TYPE;
+            grid.nodes[0][i].initial_value = T_CEIL;
         }
 
         // right side
         for (size_t i = 0; i < x_half; ++i) {
             // nodes to the right to the inclined side
             for (size_t j = i; j < y_dim; ++j) {
-                grid.nodes[x_half + i][j].condition_type = OUTER_NODE;
+                grid.nodes[y_dim - j - 1][x_dim - i].condition_type = OUTER_NODE;
             }
-            grid.nodes[x_half + i][x_half - i - 1].condition_type = BOUNDARY_1TYPE;
-            grid.nodes[x_half + i][x_half - i - 1].initial_value = T_CEIL;
+            grid.nodes[x_half - i - 1][x_dim - i - 1].condition_type = BOUNDARY_1TYPE;
+            grid.nodes[x_half - i - 1][x_dim - i - 1].initial_value = T_CEIL;
         }
 
         // hole
-        for (size_t i = x_hole_left; i < x_hole_right; ++i) {
-            for (size_t j = y_hole_lower; j < y_hole_upper - 1; ++j) {
+        for (size_t i = x_hole_left + 1; i < x_hole_right; ++i) {
+            for (size_t j = y_hole_lower + 1; j < y_hole_upper; ++j) {
                 // nodes inside the hole are marked as outer
-                grid.nodes[i][j].condition_type = OUTER_NODE;
+                grid.nodes[j][i].condition_type = OUTER_NODE;
             }
-            grid.nodes[i][y_hole_lower].condition_type = BOUNDARY_3TYPE;
-            grid.nodes[i][y_hole_upper].condition_type = BOUNDARY_3TYPE;
         }
-        for (size_t i = y_hole_lower; i < y_hole_upper; ++i) {
-            grid.nodes[x_hole_left][i].condition_type = BOUNDARY_3TYPE;
-            grid.nodes[x_hole_right][i].condition_type = BOUNDARY_3TYPE;
+        for (size_t i = x_hole_left + 1; i < x_hole_right; ++i) {
+            grid.nodes[y_hole_lower][i].condition_type = BOUNDARY_3TYPE;
+            grid.nodes[y_hole_upper][i].condition_type = BOUNDARY_3TYPE;
+        }
+        for (size_t i = y_hole_lower + 1; i < y_hole_upper; ++i) {
+            grid.nodes[i][x_hole_left].condition_type = BOUNDARY_3TYPE;
+            grid.nodes[i][x_hole_right].condition_type = BOUNDARY_3TYPE;
         }
     }
 
-    bool Model79::is_inner(const size_t x_node, const size_t y_node) const {
-        throw_on_bounds(x_node, y_node);
-        const double x = LOWER_LEFT.x + dx * x_node;
-        const double y = LOWER_LEFT.y + dy * y_node;
-
-        // must be out there
-        if (not between(x, LOWER_LEFT.x, LOWER_RIGHT.x)) return false;
-        if (not between(y, LOWER_LEFT.y, UPPER_LEFT.y)) return false;
-
-        // above the right inclined side
-        if (x > UPPER_RIGHT.x and x - UPPER_RIGHT.x > y) return false;
-
-        // inside the square hole
-        if (
-            between(x, HOLE_LOWER_LEFT.x, HOLE_UPPER_RIGHT.x) and
-            between(y, HOLE_LOWER_LEFT.y, HOLE_UPPER_RIGHT.y)
-        ) return false;
-
-        return true;
+    bool Model79::is_inner(const size_t x, const size_t y) const {
+        throw_on_bounds(x, y);
+        return not (grid.nodes[y][x].condition_type == OUTER_NODE);
     }
 
     tridiag_coefs Model79::get_x_coefs(const size_t x, const size_t y) const {
         tridiag_coefs coefs = {0, 0, 0};
         const double c = (-1.0) / (dx + 1);
+        const double R = a * dt / (dx * dx);
 
-        const condition cond = grid.nodes[x][y].condition_type;
-        const condition cond_up = grid.nodes[x][y + 1].condition_type;
+        const condition cond = grid.nodes[y][x].condition_type;
+        const condition cond_up = grid.nodes[y + 1][x].condition_type;
 
         switch (cond) {
-            case NO_CONDITION:
             case OUTER_NODE:
             case BOUNDARY_1TYPE:
                 // must be constant value
@@ -152,6 +116,10 @@ namespace model {
                 }
                 return coefs;
             }
+            case NO_CONDITION: {
+                coefs = {-R, R + 1, -R};
+                return coefs;
+            }
             default:
                 throw std::runtime_error("unknown condition type");
         }
@@ -160,12 +128,12 @@ namespace model {
     tridiag_coefs Model79::get_y_coefs(const size_t x, const size_t y) const {
         tridiag_coefs coefs = {0, 0, 0};
         const double c = (-1.0) / (dx + 1);
+        const double R = a * dt / (dy * dy);
 
-        const condition cond = grid.nodes[x][y].condition_type;
-        const condition cond_right = grid.nodes[x + 1][y].condition_type;
+        const condition cond = grid.nodes[y][x].condition_type;
+        const condition cond_right = grid.nodes[y][x + 1].condition_type;
 
         switch (cond) {
-            case NO_CONDITION:
             case OUTER_NODE:
             case BOUNDARY_1TYPE:
                 // must be constant value
@@ -188,6 +156,10 @@ namespace model {
                 } else {
                     coefs = {c, 0, 1};
                 }
+                return coefs;
+            }
+            case NO_CONDITION: {
+                coefs = {-R, R + 1, -R};
                 return coefs;
             }
             default:
@@ -218,5 +190,34 @@ namespace model {
     boundary_coefs Model79::get_y_lower_coefs(const size_t x) const {
         boundary_coefs coefs = {1, 0};
         return coefs;
+    }
+
+    static char cond_to_symbol(const condition c) {
+        switch (c) {
+            case NO_CONDITION:
+            return '#';
+            case BOUNDARY_1TYPE:
+            return '*';
+            case BOUNDARY_2TYPE:
+            return '+';
+            case BOUNDARY_3TYPE:
+            return '@';
+            case OUTER_NODE:
+            return ' ';
+            default:
+            throw std::runtime_error("unknown condition type");
+        }
+    }
+
+    void pprint_grid(const Model79 & m, std::ostream & out) {
+        const size_t x_dim = m.x_dim();
+        const size_t y_dim = m.y_dim();
+
+        for (size_t i = 0; i < y_dim; ++i) {
+            for (size_t j = 0; j < x_dim; ++j) {
+                out << cond_to_symbol(m.grid.nodes[i][j].condition_type) << ' ';
+            }
+            out << '\n';
+        }
     }
 }
