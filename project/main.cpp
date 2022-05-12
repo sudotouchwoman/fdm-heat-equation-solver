@@ -1,21 +1,37 @@
 #include <iostream>
+#include <memory>
 
-#include "model.hpp"
+#include "solver.hpp"
+#include "plotter.hpp"
 
-const double TIMESTEPS = 1000;
-const double TIME = 15;
+constexpr size_t TIMESTEPS = 1000;
+constexpr double TIME = 15.0;
 
 int main(int argc, char* argv[]) {
-    using namespace model;
+    const double dt = TIME / static_cast<double>(TIMESTEPS);
+    const double a = 10.0;
+    const double x_len = 10.0;
+    const double y_len = 5.0;
+    const size_t x_nodes = 200;
+    const size_t y_nodes = 100;
 
-    const double dt = (double)TIME / TIMESTEPS;
-    const double dx = 0.1;
-    const double dy = 0.1;
-    const double a = 1.0;
-    const size_t x_nodes = 50;
-    const size_t y_nodes = 25;
+    const double dx = x_len / static_cast<double>(x_nodes);
+    const double dy = y_len / static_cast<double>(y_nodes);
 
-    Model79 model(dt, dx, dy, a, x_nodes, y_nodes);
-    pprint_grid(model, std::cout);
+    model::Model79 m(dt, dx, dy, a, x_nodes, y_nodes);
+    solver::Problem problem(m, TIMESTEPS);
+    plt::GNUPlotWriter plotter(plt::GNUPlotWriter::basic_config.data());
+
+    pprint_grid(m, std::cout);
+    // plotter.reciever() << m;
+    // plotter.flush_buffer();
+    for (size_t i = 0; i < TIMESTEPS; ++i) {
+        problem.step();
+        // plotter.reciever() << m;
+        // plotter.flush_buffer();
+    }
+
+    plotter.reciever() << m;
+    plotter.flush_buffer();
     return 0;
 }
