@@ -6,14 +6,36 @@
 *    in schematic, the geometry of the plate
 *    can be drawn like this (god forgive me)
 *
-*    +---------+
-*    |           \
-*    |   +-----+  \
-*    |   |     |   \
-*    |   |     |    \
-*    |   +-----+     \
-*    |                \
-*    +-----------------+
+*   # - no condition
+*   * - 1st type condition
+*   + - 2nd type condition
+*   @ - 3rd type condition
+*
+*   * * * * * * * * * * * * * * * * * * * * * * * * * *                                                 
+*   + # # # # # # # # # # # # # # # # # # # # # # # # # *                                               
+*   + # # # # # # # # # # # # # # # # # # # # # # # # # # *                                             
+*   + # # # # # # # # # # # # # # # # # # # # # # # # # # # *                                           
+*   + # # # # # # # # # # # # # # # # # # # # # # # # # # # # *                                         
+*   + # # # # # # # # # # # # # # # # # # # # # # # # # # # # # *                                       
+*   + # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # *                                     
+*   + # # # # # # # # # # @ @ @ @ @ @ @ @ @ @ @ @ @ @ # # # # # # # *                                   
+*   + # # # # # # # # # @                             @ # # # # # # # *                                 
+*   + # # # # # # # # # @                             @ # # # # # # # # *                               
+*   + # # # # # # # # # @                             @ # # # # # # # # # *                             
+*   + # # # # # # # # # @                             @ # # # # # # # # # # *                           
+*   + # # # # # # # # # @                             @ # # # # # # # # # # # *                         
+*   + # # # # # # # # # @                             @ # # # # # # # # # # # # *                       
+*   + # # # # # # # # # @                             @ # # # # # # # # # # # # # *                     
+*   + # # # # # # # # # @                             @ # # # # # # # # # # # # # # *                   
+*   + # # # # # # # # # @                             @ # # # # # # # # # # # # # # # *                 
+*   + # # # # # # # # # # @ @ @ @ @ @ @ @ @ @ @ @ @ @ # # # # # # # # # # # # # # # # # *               
+*   + # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # *             
+*   + # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # *           
+*   + # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # *         
+*   + # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # *       
+*   + # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # *     
+*   + # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # *   
+*   * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
 */
 
 namespace model {
@@ -97,16 +119,6 @@ namespace model {
                 // must be constant value
                 coefs[1] = 1;
                 return coefs;
-            // case BOUNDARY_2TYPE: {
-            //     // if node above is inner (has no condition applied)
-            //     if (cond_up == NO_CONDITION) {
-            //         coefs = {0, 1, -1};
-            //     } else {
-            //         // otherwise, node below must be inner
-            //         coefs = {-1, 1, 0};
-            //     }
-            //     return coefs;
-            // }
             case BOUNDARY_3TYPE: {
                 // same story as with the 2 type condition
                 if (cond_up == NO_CONDITION) {
@@ -139,16 +151,6 @@ namespace model {
                 // must be constant value
                 coefs[1] = 1;
                 return coefs;
-            // case BOUNDARY_2TYPE: {
-            //     // if node above is inner (has no condition applied)
-            //     if (cond_right == NO_CONDITION) {
-            //         coefs = {0, 1, -1};
-            //     } else {
-            //         // otherwise, node below must be inner
-            //         coefs = {-1, 1, 0};
-            //     }
-            //     return coefs;
-            // }
             case BOUNDARY_3TYPE: {
                 // same story as with the 2 type condition
                 if (cond_right == NO_CONDITION) {
