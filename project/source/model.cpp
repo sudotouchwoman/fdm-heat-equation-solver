@@ -183,17 +183,17 @@ namespace model {
             case OUTER_NODE:
             case BOUNDARY_1TYPE:
                 return {0, 1.0, 0};
+            case BOUNDARY_3TYPE_XY:
             case BOUNDARY_3TYPE_X: {
                 if (grid.nodes[y][x + 1].condition_type == NO_CONDITION) {
                     const double c = (-1.0) / (1.0 + dx);
-                    return {0, 1.0, c};
+                    return {c, 1.0, 0};
                 }
                 if (grid.nodes[y][x - 1].condition_type == NO_CONDITION) {
                     const double c = (-1.0) / (1.0 + dx);
-                    return {c, 1.0, 0};
+                    return {0, 1.0, c};
                 }
             }
-            case BOUNDARY_3TYPE_XY:
             case BOUNDARY_3TYPE_Y:
             case BOUNDARY_2TYPE_Y:
             case NO_CONDITION: {
@@ -214,6 +214,7 @@ namespace model {
             case OUTER_NODE:
             case BOUNDARY_1TYPE:
                 return {0, 1.0, 0};
+            case BOUNDARY_3TYPE_XY:
             case BOUNDARY_3TYPE_Y: {
                 // in this particular case, 3rd type boundaries
                 // are only defined at inner nodes -> if one has these at the edge
@@ -221,17 +222,16 @@ namespace model {
                 // in order to avoid segfaults
                 if (grid.nodes[y + 1][x].condition_type == NO_CONDITION) {
                     const double c = (-1.0) / (1.0 + dx);
-                    return {0, 1.0, c};
+                    return {c, 1.0, 0};
                 }
                 if (grid.nodes[y - 1][x].condition_type == NO_CONDITION) {
                     const double c = (-1.0) / (1.0 + dx);
-                    return {c, 1.0, 0};
+                    return {0, 1.0, c};
                 }
             }
             // in this particular problem, 2nd type boundaries
             // only appears on the edge
             // in X-direction thus are treated as ordinary inner nodes
-            case BOUNDARY_3TYPE_XY:
             case BOUNDARY_3TYPE_X:
             case BOUNDARY_2TYPE_X:
             case NO_CONDITION: {
