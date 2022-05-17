@@ -19,8 +19,17 @@ namespace plt {
             "set title 'Heat equation solution using TDMA solver'\n"
             "set xlabel 'X'\n"
             "set ylabel 'Y'\n"
-            // "set xrange [0:199]\n"
-            // "set yrange [0:99]\n"
+            "set view map scale 1\n"
+            "set palette color\n"
+            "set pm3d map\n";
+
+        constexpr static std::string_view basic_png_config =
+            "set terminal png cairo size 1000 1000 enhanced font"
+            "'Verdana, 14'\n"
+            "set output 't-field.png'\n"
+            "set title 'Heat equation solution using TDMA solver'\n"
+            "set xlabel 'X'\n"
+            "set ylabel 'Y'\n"
             "set view map scale 1\n"
             "set palette color\n"
             "set pm3d map\n";
